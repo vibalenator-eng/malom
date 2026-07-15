@@ -1,0 +1,94 @@
+# Malom
+
+A small, self-contained web implementation of **Malom** (Nine Men’s Morris), written in HTML, CSS, and vanilla JavaScript. It runs directly in a modern browser—there are no packages, server, or build step.
+
+## What it does
+
+- Plays the classic two-player Malom board game on a 24-position board.
+- Supports playing against the computer or a local opponent on the same device.
+- Lets players place pieces, move pieces along connected lines, and drag pieces as an alternative to clicking.
+- Allows “flying” to any open position when a player has exactly three pieces left.
+- Detects mills (three pieces in a row), then lets the player remove an opposing piece; pieces outside a mill are preferred where possible.
+- Ends the game when a player has fewer than three pieces or has no legal move; declares a draw after 100 moves without a mill.
+- Includes a 30-second turn display with a light audio reminder after time runs out.
+- Offers five computer difficulty levels and adapts its layout for phones and larger screens.
+
+> The visible game text is Hungarian: for example, `Piros` means red, `Kék` means blue, and `Új játék` means new game.
+
+## Run it
+
+Open [index.html](./index.html) in a current web browser. That is all that is required.
+
+## How a game proceeds
+
+```mermaid
+flowchart TD
+    A[Start a new game] --> B[Each player has 9 reserve pieces]
+    B --> C{Reserve pieces left?}
+    C -->|Yes| D[Place a piece on an empty point]
+    C -->|No| E[Select a piece and move it]
+    E --> F{Exactly 3 pieces?}
+    F -->|Yes| G[Move to any empty point]
+    F -->|No| H[Move to a connected empty point]
+    D --> I{Created a mill?}
+    G --> I
+    H --> I
+    I -->|Yes| J[Remove one opposing piece]
+    I -->|No| K[Switch turns]
+    J --> K
+    K --> L{Opponent has 3+ pieces\nand a legal move?}
+    L -->|Yes| C
+    L -->|No| M[Win]
+```
+
+## Project structure
+
+The current project intentionally has a compact, single-file structure:
+
+```text
+malom/
+├── index.html   # Markup, styling, game board, input handling, rules, AI, and UI text
+└── README.md    # This guide
+```
+
+Inside `index.html`, the responsibilities are arranged as follows:
+
+```mermaid
+flowchart LR
+    HTML[HTML layout\nheader, controls, sidebar, dialog] --> UI[DOM UI]
+    CSS[Embedded CSS\ncolours, responsive layout] --> UI
+    JS[Embedded JavaScript] --> UI
+    JS --> Board[SVG board rendering]
+    JS --> Rules[Rules engine\nlegal moves, mills, captures, win checks]
+    JS --> Input[Click and drag-and-drop input]
+    JS --> AI[Computer player\nminimax + alpha-beta pruning]
+    JS --> Clock[Turn timer + audio reminder]
+```
+
+## Computer opponent
+
+The computer plays blue. Difficulty levels change how it chooses moves:
+
+| Level | Behaviour |
+| --- | --- |
+| 1 — Beginner | Mostly random legal moves |
+| 2–4 | Increasingly deep minimax search |
+| 5 — Professional | Deep search with minimal randomness |
+
+The evaluation values material advantage, potential mills, the opponent’s potential mills, and whether either player can move. The search uses alpha-beta pruning to avoid evaluating branches that cannot improve the result.
+
+## Key rules implemented
+
+| Situation | Behaviour |
+| --- | --- |
+| Placement phase | Players alternate placing their nine pieces on free points. |
+| Movement phase | A piece may move only to an adjacent free point. |
+| Three remaining pieces | A player may move a piece to any free point (“flying”). |
+| Mill | Forming a line of three allows removal of one opponent piece. |
+| Capture preference | An opponent piece not in a mill must be selected when one exists. |
+| Draw | The game ends in a draw after 100 non-mill moves. |
+
+## Later: Python version
+
+When the Python recreation is added, create a separate guide such as `README-python.md`. It should document the Python-specific setup, entry point, dependencies, architecture, and how its game engine relates to this browser version. Keeping it separate means the simple “open the HTML file” instructions above remain accurate for the existing application.
+
