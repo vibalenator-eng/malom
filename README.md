@@ -11,6 +11,7 @@ This project is a small **Nine Men's Morris (Malom)** web application designed f
 | Browser JavaScript | `static/app.js` | It renders data and sends player actions to the server. |
 | HTML and CSS | `templates/index.html`, `static/style.css` | They provide the page structure and appearance. |
 | Automated tests | `tests/test_game_engine.py` | Tests protect rules while you make changes. |
+| Computer player | `ai.py` | Five levels show how evaluation and randomness affect an AI. |
 | Git | the workflow below | Git saves meaningful checkpoints of your work. |
 
 ## Architecture
@@ -26,6 +27,8 @@ flowchart LR
 ```
 
 The important boundary is between `app.py` and `game_engine.py`: Flask knows about web requests; the engine knows about Malom rules. That means the rules can be tested without a browser or a server.
+
+The computer has five difficulty levels. Level 1 plays randomly. Levels 2–5 score each legal move with `ai.score()`; higher levels add less random noise, so their choices become increasingly consistent. The 30-second reminder sound is generated locally by the browser's Web Audio API—no audio file or plugin is needed.
 
 ```mermaid
 flowchart TD

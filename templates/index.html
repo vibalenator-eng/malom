@@ -1,32 +1,23 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Malom — Python learning project</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  </head>
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Malom — Python learning project</title><link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"></head>
   <body>
     <main class="app">
-      <header>
-        <div><p class="eyebrow">Python + Flask learning project</p><h1>Malom</h1></div>
-        <button id="new-game">New game</button>
-      </header>
+      <header><div><p class="eyebrow">Python + Flask learning project</p><h1>Malom</h1></div><button id="new-game">New game</button></header>
+      <section class="controls" aria-label="Game controls">
+        <label>Opponent <select id="mode"><option value="computer">Computer</option><option value="local">Human opponent</option></select></label>
+        <label>Computer level <select id="difficulty"><option value="1">1 · Beginner</option><option value="2">2 · Easy</option><option value="3" selected>3 · Intermediate</option><option value="4">4 · Strong</option><option value="5">5 · Expert</option></select></label>
+      </section>
       <section class="game-layout">
-        <div id="board" class="board" aria-label="Nine Men's Morris board"></div>
-        <aside class="panel">
-          <h2>Game status</h2>
-          <p id="status">Loading game…</p>
-          <dl>
-            <div><dt>Red pieces left</dt><dd id="red-count">9</dd></div>
-            <div><dt>Blue pieces left</dt><dd id="blue-count">9</dd></div>
-            <div><dt>Moves played</dt><dd id="move-count">0</dd></div>
-          </dl>
-          <p class="hint">Place all nine pieces. Form a line of three to remove an opponent piece. With three pieces, you can fly anywhere.</p>
-        </aside>
+        <svg id="board" class="board" viewBox="0 0 100 100" aria-label="Nine Men's Morris board" role="img">
+          <g class="board-lines">
+            <path d="M10 10H90V90H10Z M20 20H80V80H20Z M30 30H70V70H30Z"/>
+            <path d="M50 10V30 M50 70V90 M10 50H30 M70 50H90"/>
+          </g><g id="pieces"></g>
+        </svg>
+        <aside class="panel"><h2>Game status</h2><p id="status">Loading game…</p><p id="timer" class="timer">0:30</p><dl><div><dt>Red pieces left</dt><dd id="red-count">9</dd></div><div><dt>Blue pieces left</dt><dd id="blue-count">9</dd></div><div><dt>Moves played</dt><dd id="move-count">0</dd></div></dl><p class="hint">Place all nine pieces. Form a line of three to remove an opponent piece. With three pieces, you can fly anywhere.</p><p id="recommendation" class="recommendation" hidden></p></aside>
       </section>
       <section class="lesson"><h2>How to play</h2><p>Click an empty circle to place a piece. Once placement ends, click your piece and then a highlighted destination. When you form a mill, click a highlighted opponent piece to remove it.</p></section>
-    </main>
-    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    </main><script src="{{ url_for('static', filename='app.js') }}"></script>
   </body>
 </html>
