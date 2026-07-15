@@ -66,7 +66,7 @@ function restartClock() {
   }, 250);
 }
 
-function addNode(index, piece) {
+function addNode(piece, index) {
   const node = document.createElementNS(SVG_NS, "g");
   const classes = ["node"];
   if (piece === null) classes.push("empty");
