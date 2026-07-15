@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Malom — Python learning project</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <div><p class="eyebrow">Python + Flask learning project</p><h1>Malom</h1></div>
+        <button id="new-game">New game</button>
+      </header>
+      <section class="game-layout">
+        <div id="board" class="board" aria-label="Nine Men's Morris board"></div>
+        <aside class="panel">
+          <h2>Game status</h2>
+          <p id="status">Loading game…</p>
+          <dl>
+            <div><dt>Red pieces left</dt><dd id="red-count">9</dd></div>
+            <div><dt>Blue pieces left</dt><dd id="blue-count">9</dd></div>
+            <div><dt>Moves played</dt><dd id="move-count">0</dd></div>
+          </dl>
+          <p class="hint">Place all nine pieces. Form a line of three to remove an opponent piece. With three pieces, you can fly anywhere.</p>
+        </aside>
+      </section>
+      <section class="lesson"><h2>How to play</h2><p>Click an empty circle to place a piece. Once placement ends, click your piece and then a highlighted destination. When you form a mill, click a highlighted opponent piece to remove it.</p></section>
+    </main>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
