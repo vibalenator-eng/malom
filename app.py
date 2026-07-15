@@ -40,7 +40,9 @@ def play_computer_turn() -> None:
 def add_recommendation_if_needed() -> None:
     """Give the losing human a useful, free reading/listening suggestion."""
     global recommendation
-    if game.winner is not None:
+    # In computer mode, Red is the human and Blue is the computer. In local
+    # mode both players are human, so either losing player receives a tip.
+    if game.winner is not None and (mode == "local" or game.winner == 1):
         recommendation = choice(FREE_LEARNING_RESOURCES)
 
 
