@@ -16,10 +16,10 @@ text = source.read_text(encoding="utf-8")
 styles = getSampleStyleSheet()
 styles.add(ParagraphStyle(name="TitleStyle", parent=styles["Title"], fontName="Helvetica-Bold", fontSize=20, leading=24, textColor=colors.HexColor("#0f172a")))
 styles.add(ParagraphStyle(name="PlanHeading2", parent=styles["Heading2"], fontSize=13, leading=16, spaceBefore=10, spaceAfter=4, textColor=colors.HexColor("#0f172a")))
-styles.add(ParagraphStyle(name="Body", parent=styles["BodyText"], fontSize=9.5, leading=12.5, textColor=colors.HexColor("#111827")))
-styles.add(ParagraphStyle(name="PlanCode", parent=styles["Code"], fontName="Courier", fontSize=8.2, leading=10.2, backColor=colors.HexColor("#f8fafc"), borderColor=colors.HexColor("#dbeafe"), borderPadding=6, borderWidth=0.5))
-styles.add(ParagraphStyle(name="Small", parent=styles["BodyText"], fontSize=8.2, leading=10.4, textColor=colors.HexColor("#475569")))
-styles.add(ParagraphStyle(name="PlanBullet", parent=styles["BodyText"], fontSize=9.2, leading=11.2, leftIndent=10, bulletIndent=0, textColor=colors.HexColor("#111827")))
+styles.add(ParagraphStyle(name="Body", parent=styles["BodyText"], fontSize=10.2, leading=13.5, textColor=colors.HexColor("#111827")))
+styles.add(ParagraphStyle(name="PlanCode", parent=styles["Code"], fontName="Courier", fontSize=8.6, leading=10.8, backColor=colors.HexColor("#f8fafc"), borderColor=colors.HexColor("#dbeafe"), borderPadding=6, borderWidth=0.5))
+styles.add(ParagraphStyle(name="Small", parent=styles["BodyText"], fontSize=8.8, leading=11.0, textColor=colors.HexColor("#475569")))
+styles.add(ParagraphStyle(name="PlanBullet", parent=styles["BodyText"], fontSize=9.6, leading=12.0, leftIndent=10, bulletIndent=0, textColor=colors.HexColor("#111827")))
 
 
 def draw_skill_chart():
@@ -147,23 +147,23 @@ def build_story(text):
     story.append(KeepTogether([
         Paragraph("Skill Snapshot", styles["PlanHeading2"]),
         draw_skill_chart(),
-        Spacer(1, 0.2 * cm),
+        Spacer(1, 0.3 * cm),
     ]))
 
     story.append(KeepTogether([
         Paragraph("Weekly Rhythm", styles["PlanHeading2"]),
         draw_weekly_rhythm(),
-        Spacer(1, 0.2 * cm),
+        Spacer(1, 0.3 * cm),
     ]))
 
     story.append(KeepTogether([
         Paragraph("Target System Architecture", styles["PlanHeading2"]),
         draw_architecture(),
-        Spacer(1, 0.25 * cm),
+        Spacer(1, 0.35 * cm),
     ]))
 
     story.append(Paragraph("Key idea: build the product while building technical skill in parallel, using strong project management habits to stay focused inside an 8-hour weekly budget.", styles["Body"]))
-    story.append(Spacer(1, 0.25 * cm))
+    story.append(Spacer(1, 0.35 * cm))
 
     for kind, payload in split_markdown_blocks(text):
         if kind == "heading":
@@ -189,7 +189,7 @@ def build_story(text):
             paragraph = clean_inline(payload).replace("\n", "<br/>")
             if paragraph:
                 story.append(Paragraph(paragraph, styles["Body"]))
-        story.append(Spacer(1, 0.06 * cm))
+        story.append(Spacer(1, 0.08 * cm))
     return story
 
 

@@ -14,6 +14,8 @@
 
 **Key Insight:** You have project management skills to lead this. Technology is learnable. We'll build the app AND your tech skills in parallel.
 
+**Additional Learning Focus:** As the product grows, we'll add real-time communication patterns: MQTT for lightweight event messaging, WebSockets for live updates, and RPC-style request/response flows for commands and control.
+
 ---
 
 ## PHASE 0: FOUNDATION WEEK (Week 1)
@@ -987,7 +989,58 @@ docker-compose down
 
 ---
 
-### 1.4 Project Management: Risk Assessment (PM Role) [2 hours]
+### 1.4 Real-Time Communication & Event-Driven Patterns (Architect Role) [3 hours]
+
+DEFINITION - REAL-TIME COMMUNICATION: Patterns for live, low-latency interaction between app services, browser clients, and devices.
+
+**Step 1.4.1: Learn the Core Concepts [1 hour]**
+
+**Concepts to understand:**
+- MQTT: Publish/subscribe messaging for lightweight telemetry, device events, and simple event fan-out
+- WebSockets: Full-duplex, real-time communication for live game updates, chat, and status streams
+- RPC (Remote Procedure Call): Request/response pattern for commands like "start game", "move piece", or "send chat"
+
+**Suggested learning order:**
+1. Understand topics and when each pattern is appropriate
+2. Compare MQTT vs WebSockets vs RPC for Malom use cases
+3. Choose one simple proof-of-concept for the MVP
+
+**Step 1.4.2: Map the Patterns to Malom Pro [1 hour]**
+
+**Recommended use cases for this project:**
+- MQTT: send lightweight events like "game started", "player joined", or "system alert"
+- WebSockets: live game board updates, Balazs chat streaming, and real-time UI sync
+- RPC: trigger server actions such as "create game", "make move", or "clear conversation"
+
+**Decision template:**
+```
+DECISION: Real-time pattern choice
+CONTEXT: We need live interaction without overcomplicating the MVP
+OPTIONS CONSIDERED:
+  1. Pure REST only
+  2. REST + WebSockets
+  3. MQTT + WebSockets + RPC
+DECISION: We will use WebSockets for live UI updates and RPC-style commands, and keep MQTT as an optional later step for lightweight event messaging.
+CONSEQUENCES: The MVP stays simpler, while the architecture remains extensible.
+```
+
+**Step 1.4.3: Build a Small Proof of Concept [1 hour]**
+
+**Goal:** Prove the concept locally before adding it to the app.
+
+**Minimal POC ideas:**
+- WebSocket echo server: client sends message, server returns it instantly
+- RPC-style endpoint: POST /api/game/action and receive a structured response
+- MQTT topic test: publish and subscribe to a test topic locally
+
+**Deliverables:**
+- Save to repo: `docs/REALTIME_ARCHITECTURE.md`
+- Create a simple local proof-of-concept script or endpoint
+- Write 3 bullets explaining when to use MQTT, WebSockets, and RPC
+
+---
+
+### 1.5 Project Management: Risk Assessment (PM Role) [2 hours]
 
 **Step 1.4.1: Identify Risks [1 hour]**
 
@@ -1097,6 +1150,7 @@ Living document updated weekly. Identifies, assesses, mitigates risks.
 
 **Week 4 (Aug 8-14):**
 - [ ] Game API endpoints
+- [ ] Real-time transport prototype (WebSocket echo or RPC-style command flow)
 - [ ] Unit tests (80%+ coverage)
 - [ ] Documentation generated
 - Est: 8 hours
@@ -1128,6 +1182,7 @@ Living document updated weekly. Identifies, assesses, mitigates risks.
 **Week 8 (Sep 5-11):**
 - [ ] Chat UI component
 - [ ] Conversation history
+- [ ] Lightweight MQTT/WebSocket event test for live updates
 - [ ] Personality evaluation framework
 - Est: 8 hours
 
@@ -1200,7 +1255,7 @@ Track weekly:
 
 ---
 
-### 1.5 Summary: Week 1 Deliverables (Completion Check)
+### 1.6 Summary: Week 1 Deliverables (Completion Check)
 
 **MUST BE DONE BY END OF WEEK 1:**
 
