@@ -142,6 +142,8 @@ Open <http://localhost:8000> in a modern browser. Leave the terminal running for
 4. When talon covering or trump exchange is legal, its action appears in the right-hand panel. A 20/40 marriage appears as two buttons directly above your hand when you lead with a same-suit Király + Felső. Choose the button for the card you want to play; that click both announces the marriage and plays that card. You do not select both cards.
 5. The first player to 66 wins the deal. At the end, the page confirms whether the game was written to the local JSONL archive and shows the saved-game count. The PowerShell window also prints a save confirmation or the file-system error.
 
+If the final message says the server did not send a save status, stop the server with `Ctrl+C`, start `python .\server.py` again from the `Multiple Agents` directory, and hard-refresh the browser with `Ctrl+F5`. That message means the browser did not receive the archive status field from the server version it was connected to. The current server also provides `GET /api/ai/stats` to verify the saved-game count.
+
 ### Play with two people on one device
 
 1. Choose **Két játékos, egy eszköz**.
