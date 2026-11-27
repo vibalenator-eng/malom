@@ -76,6 +76,13 @@ class Handler(BaseHTTPRequestHandler):
         view = room["game"].view(player, "", room["code"], room["mode"], names)
         if room["mode"] == "ai":
             view["ai_difficulty"] = room["difficulty"]
+            if room["game"].finished:
+                view["training_archive"] = {
+                    "saved": room["training_saved"],
+                    "count": room.get("training_saved_count"),
+                    "capacity": training_stats()["capacity"],
+                    "error": room.get("training_error"),
+                }
         return view
 
     def do_GET(self):
@@ -129,7 +136,7 @@ class Handler(BaseHTTPRequestHandler):
                     elif mode == "hotseat":
                         tokens[1] = token
                     room = {"code": code, "mode": mode, "tokens": tokens, "names": [body.get("name") or "Piros", "Kék" if mode != "ai" else "Számítógép"], "game": game,
-                            "difficulty": difficulty, "training_samples": [], "training_saved": False}
+                            "difficulty": difficulty, "training_samples": [], "training_saved": False, "training_error": None}
                     ROOMS[code] = room
                 return self._send(201, {"code": code, "token": token, "player": 0})
             parts = parsed.path.strip("/").split("/")
@@ -170,10 +177,12 @@ class Handler(BaseHTTPRequestHandler):
                         raise ValueError("Ismeretlen lépés.")
                     if room["mode"] == "ai" and game.finished and not room["training_saved"]:
                         try:
-                            save_game(make_record(room["difficulty"], room["training_samples"], game.winner,
-                                                  game.points[:], game.end_reason))
+                            room["training_saved_count"] = save_game(make_record(room["difficulty"], room["training_samples"], game.winner,
+                                                                                   game.points[:], game.end_reason))
                             room["training_saved"] = True
+                            print(f"Tanulási parti mentve ({room['training_saved_count']}/{training_stats()['capacity']}): {training_stats()['format']}")
                         except OSError as exc:
+                            room["training_error"] = str(exc)
                             print(f"Nem sikerült a tanulási partit menteni: {exc}")
                     view = self._view(room, player)
                     if recent_opponent_trick:

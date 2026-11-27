@@ -140,7 +140,7 @@ Open <http://localhost:8000> in a modern browser. Leave the terminal running for
 2. Choose a level from **Gép nehézsége** (1–5), then choose **Játék a gép ellen**. The sixth, **Tanuló**, remains disabled while the archive and future learning algorithm are prepared.
 3. Click one of your highlighted/legal cards to play it. The computer responds automatically. Its completed trick remains visible for five seconds before your next response is enabled.
 4. When talon covering or trump exchange is legal, its action appears in the right-hand panel. A 20/40 marriage appears as two buttons directly above your hand when you lead with a same-suit Király + Felső. Choose the button for the card you want to play; that click both announces the marriage and plays that card. You do not select both cards.
-5. The first player to 66 wins the deal.
+5. The first player to 66 wins the deal. At the end, the page confirms whether the game was written to the local JSONL archive and shows the saved-game count. The PowerShell window also prints a save confirmation or the file-system error.
 
 ### Play with two people on one device
 
