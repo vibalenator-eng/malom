@@ -148,17 +148,34 @@ git push -u origin codex/multiple-agents-snapszer
 
 `git fetch origin` updates your local view of GitHub without changing files. `git switch -c` creates and switches to a branch starting at the latest remote main. `git cherry-pick` copies only the selected commit onto that branch. This avoids accidentally including commits from another local project. If there are uncommitted changes in files that the branch switch would replace, save them first with `git stash push --include-untracked`, then restore them with `git stash pop` after switching.
 
+The larger diagram below labels each branch state with the command that moved the work there. Run the command shown on an arrow to move from the previous state to the next one. Commit IDs are the IDs from this session; when repeating the workflow for another feature, use that feature's commit ID.
+
 ```mermaid
-gitGraph
-  commit id: "394af0d common base"
-  branch origin/main
-  commit id: "remote Malom updates"
-  commit id: "4c510da remote latest"
-  branch codex/multiple-agents-snapszer
-  commit id: "snapszer project only"
+%%{init: {"theme":"base", "themeVariables":{"fontSize":"18px"}, "flowchart":{"nodeSpacing":70,"rankSpacing":90}}}%%
+flowchart LR
+  base["Common base<br/>394af0d"]
+
+  subgraph remote["GitHub branch path"]
+    direction LR
+    fetch["Remote main tip<br/>origin/main<br/><br/>git fetch origin"]
+    feature["Feature branch created<br/>codex/multiple-agents-snapszer<br/><br/>git switch -c codex/multiple-agents-snapszer origin/main"]
+    cherry["Snapszer commit added<br/>b773c4d<br/><br/>git cherry-pick 0cd115d"]
+    pushed["Published feature branch<br/><br/>git push -u origin codex/multiple-agents-snapszer"]
+    fetch --> feature --> cherry --> pushed
+  end
+
+  subgraph local["Separate local main path"]
+    direction LR
+    malom["Local Malom commit<br/>72f542f"]
+    snapszer["Local snapszer commit<br/>0cd115d"]
+    malom --> snapszer
+  end
+
+  base --> fetch
+  base --> malom
 ```
 
-The project branch starts from the latest GitHub `main` and contains the snapszer commit by itself. `main` stays separate until the project branch is merged.
+The pushed branch starts from the latest GitHub `main` and contains the snapszer project by itself. The separate local `main` path shows why we did not push `main`: doing so would also have published the unrelated Malom commit. `git fetch` only updates the remote-tracking reference; `git switch -c` creates the feature branch; `git cherry-pick` copies the selected commit; `git push -u` publishes that branch.
 
 ## 7. How the agents worked together in this demo
 
