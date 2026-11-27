@@ -1,7 +1,7 @@
 """Rules and authoritative game state for the two-player draw-pile Snapszer demo."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import random
 
 SUITS = ("piros", "tok", "zold", "makk")
@@ -40,6 +40,7 @@ class Game:
     end_reason: str = ""
     last_trick_winner: int | None = None
     message: str = ""
+    played_ids: list[str] = field(default_factory=list)
 
     @classmethod
     def new(cls, seed: int | None = None) -> "Game":
@@ -100,6 +101,7 @@ class Game:
         elif declare_suit is not None:
             raise ValueError("Érvénytelen bemondás.")
 
+        self.played_ids.append(card["id"])
         self.hands[player].remove(card)
         if self.lead_card is None:
             self.last_trick = []
