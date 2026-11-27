@@ -23,7 +23,7 @@ See [Architecture and User Manual](./ARCHITECTURE_AND_USER_MANUAL.md) for the fu
 - `server.py` owns rooms, validates actions, keeps both hands private, serves the HTTP/JSON API, and records completed computer games.
 - `static/` contains the browser interface. It only receives the requesting player's hand and legal card IDs.
 
-The server is authoritative. Active room data exists in memory and is lost when the process stops. Room codes are invitations; each seat also receives a random private token. Only completed computer games are kept between restarts, in `data/ai_training_games.jsonl`; this archive is excluded from Git. The sixth **Tanuló** level is not active yet: the stored games are training material, not automatic learning.
+The server is authoritative. Active room data exists in memory and is lost when the process stops. Room codes are invitations; each seat also receives a random private token. Only completed computer games are kept between restarts, in `data/ai_training_games.jsonl`. The current archive snapshot is included in this repository at the user's request; future completed games update that tracked file. The sixth **Tanuló** level is not active yet: the stored games are training material, not automatic learning.
 
 ## Rules used in this prototype
 

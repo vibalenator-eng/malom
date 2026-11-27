@@ -1,4 +1,3 @@
 __pycache__/
 *.py[cod]
-/data/ai_training_games.jsonl
 /data/ai_training_games.jsonl.tmp

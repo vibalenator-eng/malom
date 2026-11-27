@@ -120,7 +120,7 @@ $env:SNAPSZER_MAX_TRAINING_GAMES = "10000"
 python server.py
 ```
 
-To use the 1,000-game limit explicitly, set it to `1000`; other values fall back to 1,000. The archive is local JSONL text, can be opened with a text editor, and is excluded from Git so played games are not committed. The browser lobby shows how many archived games there are. A future level 6 should train offline from this archive, then be compared against fixed test deals before it is enabled; simply storing games does not make the AI learn automatically.
+To use the 1,000-game limit explicitly, set it to `1000`; other values fall back to 1,000. The archive is JSONL text and can be opened with a text editor. Its current snapshot is tracked in Git because the user requested the complete repository be uploaded; future games update the tracked file. The browser lobby shows how many archived games there are. A future level 6 should train offline from this archive, then be compared against fixed test deals before it is enabled; simply storing games does not make the AI learn automatically.
 
 ## 5. User manual
 

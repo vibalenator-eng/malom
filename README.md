@@ -109,6 +109,11 @@ For Mandelbrot, every pixel is a complex coordinate `c`; the page repeatedly cal
 
 The only optional external navigation is a Goodreads link that can appear after a computer win. The browser reaches Goodreads only if the user chooses to click it; no data is sent automatically.
 
-## Later: Python version
+## Python versions
 
-When the Python recreation is added, create a separate guide such as `README-python.md`. It should document the Python-specific setup, entry point, dependencies, architecture, and how its game engine relates to this browser version. Keeping it separate means the simple “open the HTML file” instructions above remain accurate for the existing application.
+This repository also contains two Python Malom implementations:
+
+- `python_malom/` is a standard-library implementation. See [`README-python.md`](./README-python.md) for its setup and architecture.
+- The repository-root `app.py`, `game_engine.py`, `ai.py`, `templates/`, and `static/` files form a Flask learning version. See [`README-FLASK.md`](./README-FLASK.md) for setup, API flow, and tests.
+
+The browser-only version above still runs directly from `index.html` without a server.
