@@ -19,6 +19,8 @@ A small, self-contained web implementation of **Malom** (Nine Men’s Morris), w
 
 Open [index.html](./index.html) in a current web browser. That is all that is required.
 
+For the new creative-coding page, open [fractals.html](./fractals.html). It includes Mandelbrot and Julia sets plus a procedural terrain view, safe starting values, parameter explanations, and manual redraw controls.
+
 ## How a game proceeds
 
 ```mermaid
@@ -88,7 +90,25 @@ The evaluation values material advantage, potential mills, the opponent’s pote
 | Capture preference | An opponent piece not in a mill must be selected when one exists. |
 | Draw | The game ends in a draw after 100 non-mill moves. |
 
+## Pages, privacy, and calculations
+
+The project is static: open `index.html` in a browser, then use its header links to visit `fractals.html`, `mandelbrot-zoom.html`, and `attractors.html`.
+
+All calculations run locally in the browser. There is no backend, account, database, API call, `fetch`, WebSocket, analytics service, or remote compute service.
+
+| Page | What happens locally |
+| --- | --- |
+| `index.html` | Malom rules, legal-move checks, timer, and computer opponent. |
+| `fractals.html` | Fractal pixels and recursive visual experiments. |
+| `mandelbrot-zoom.html` | Mandelbrot pixel recalculation for the currently selected complex-plane square. |
+| `attractors.html` | Numerical time-step integration and canvas drawing for the listed attractors. |
+
+The Malom computer generates legal moves, simulates future positions with minimax and alpha-beta pruning, and scores material, potential mills, threats, and mobility. It is local game logic, not an online service or machine-learning model.
+
+For Mandelbrot, every pixel is a complex coordinate `c`; the page repeatedly calculates `z = z² + c` starting with `z = 0`. Dragging a square in the zoom page selects a smaller complex-plane range, which is recalculated locally. Attractors repeatedly apply their differential equations in small local time steps and draw the resulting trajectory.
+
+The only optional external navigation is a Goodreads link that can appear after a computer win. The browser reaches Goodreads only if the user chooses to click it; no data is sent automatically.
+
 ## Later: Python version
 
 When the Python recreation is added, create a separate guide such as `README-python.md`. It should document the Python-specific setup, entry point, dependencies, architecture, and how its game engine relates to this browser version. Keeping it separate means the simple “open the HTML file” instructions above remain accurate for the existing application.
-
