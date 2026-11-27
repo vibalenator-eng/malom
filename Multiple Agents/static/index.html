@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#12372d">
+  <title>Snapszer — Húzós játék</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">M</span><div><p class="eyebrow">MAGYAR KÁRTYAJÁTÉK</p><h1>Húzós snapszer</h1></div></div>
+      <button id="newGameTop" class="quiet hidden">Új játék</button>
+    </header>
+
+    <section id="lobby" class="lobby">
+      <div class="intro">
+        <p class="eyebrow">KETTEN • 20 LAP • 66 PONT</p>
+        <h2>Egy jó partihoz<br><em>csak egy pakli kell.</em></h2>
+        <p class="intro-copy">Játssz a számítógép ellen, egy gépen felváltva, vagy hívj meg egy másik játékost a szobakóddal.</p>
+        <div class="rule-pills"><span>✦ Magyar kártya</span><span>✦ Húszas és negyvenes</span><span>✦ Húzós talon</span></div>
+      </div>
+      <div class="lobby-card">
+        <label for="playerName">A neved</label>
+        <input id="playerName" maxlength="18" placeholder="Piros" autocomplete="nickname">
+        <button id="aiButton" class="primary">Játék a gép ellen <span>→</span></button>
+        <button id="hotseatButton" class="secondary">Két játékos, egy eszköz</button>
+        <div class="divider"><span>VAGY ONLINE</span></div>
+        <button id="onlineButton" class="secondary">Szoba létrehozása</button>
+        <div class="join-row"><input id="roomCode" maxlength="6" placeholder="SZÓBAKÓD" aria-label="Szobakód"><button id="joinButton" class="join">Csatlakozás</button></div>
+        <p id="lobbyError" class="error" role="alert"></p>
+        <p class="small-note">Online játékhoz mindkét játékos ugyanazt a címet nyissa meg. Interneten kívülről nyilvános tárhely szükséges.</p>
+      </div>
+    </section>
+
+    <section id="game" class="game hidden">
+      <div class="game-head">
+        <div><p class="eyebrow" id="modeLabel">JÁTÉK</p><h2 id="turnLabel">Te következel</h2></div>
+        <div id="roomBadge" class="room-badge hidden"><span>MEGHÍVÓKÓD</span><strong id="roomCodeLabel"></strong><button id="copyButton" title="Kód másolása">Másolás</button></div>
+      </div>
+      <div class="table-layout">
+        <section class="table" aria-label="Játéktér">
+          <div class="opponent">
+            <div class="avatar" id="opponentAvatar">K</div><div><strong id="opponentName">Kék</strong><span id="opponentMeta">5 lap</span></div>
+            <div id="opponentCards" class="back-cards" aria-label="Ellenfél lefordított lapjai"></div>
+          </div>
+          <div class="play-area">
+            <div class="table-caption"><span class="live-dot"></span><span id="tableMessage">A parti indul</span></div>
+            <div class="trick">
+              <div id="leadSlot" class="trick-slot"><span class="slot-label">ELSŐ LAP</span><span class="empty-card">·</span></div>
+              <div class="trick-arrow">↔</div>
+              <div id="replySlot" class="trick-slot"><span class="slot-label">MÁSODIK LAP</span><span class="empty-card">·</span></div>
+            </div>
+            <div class="trump-info"><span id="trumpIcon" class="trump-icon" aria-hidden="true"></span><span>Adu <b id="trumpLabel">Piros</b></span><div id="trumpCard"></div><span id="stockLabel" class="stock-label">9 lap a talonban</span></div>
+          </div>
+          <div class="player-row"><div class="avatar player-avatar">P</div><div><strong id="playerNameLabel">Piros</strong><span id="playerMeta">5 lap • 0 pont</span></div><span id="turnPill" class="turn-pill">TE JÖSSZ</span></div>
+          <div id="marriageInline" class="marriage-inline">
+            <div id="marriageHeading" class="marriage-heading hidden">20 / 40 bemondás: válassz egy lapot a párból.</div>
+            <div id="marriages" class="marriages" aria-live="polite"></div>
+            <p id="marriageHelp" class="hint marriage-help"></p>
+          </div>
+          <div id="hand" class="hand" aria-label="Saját lapjaid"></div>
+        </section>
+        <aside class="side-panel">
+          <div class="score-card"><p class="eyebrow">PONTSZÁM</p><div class="score-line"><span id="scoreName0">Piros</span><b id="score0">0</b></div><div class="score-line"><span id="scoreName1">Kék</span><b id="score1">0</b></div><div class="target"><span></span><small>CÉL: 66 PONT</small></div></div>
+          <div class="action-card"><p class="eyebrow">JÁTÉKLEHETŐSÉGEK</p><button id="closeButton" class="action" disabled aria-describedby="closeReason">Talon betakarása</button><small id="closeReason" class="action-reason"></small><button id="exchangeButton" class="action" disabled aria-describedby="exchangeReason">Adu Alsó cseréje</button><small id="exchangeReason" class="action-reason"></small><p id="actionHint" class="hint">Válassz ki egy lapot a kijátszáshoz.</p></div>
+          <button id="leaveButton" class="leave">Kilépés a játékból</button>
+        </aside>
+      </div>
+      <div id="toast" class="toast" role="status"></div>
+    </section>
+    <footer><span>Húzós snapszer · böngészős bemutató</span><a href="https://schnapsen.at/hu/szabalyok" target="_blank" rel="noreferrer">Szabályok röviden ↗</a></footer>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
