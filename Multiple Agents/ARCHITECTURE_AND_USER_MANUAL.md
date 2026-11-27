@@ -111,7 +111,7 @@ The lobby offers five selectable levels:
 
 Search levels do not know the opponent's actual hand or the talon's real order. They sample plausible unseen cards and use a simple response policy to estimate the result. This is a stronger decision aid, not a perfect solver.
 
-Level 6 (**Tanuló**) is shown as unavailable while its data collection is prepared. The app now saves each completed human-versus-computer deal to `data/ai_training_games.jsonl`, one compact JSON object per line. A record includes the chosen difficulty, score, winner, the computer's own observed hand, public state, legal moves, and the computer's decisions with a final win/loss reward. It does not store the human's hidden hand or the undealt talon order. Games are not used to update AI behavior yet: an offline training and evaluation step still needs to be implemented before level 6 can learn from them.
+Level 6 (**Tanuló**) is shown as unavailable while its data collection is prepared. The app saves each completed human-versus-computer deal to `data/ai_training_games.jsonl`, one compact JSON object per line. The `data` folder and JSONL file are created only when the first AI game is completed while this updated server is running; starting the server alone does not create them. Games played before this version was started are not saved retroactively. A record includes the chosen difficulty, score, winner, the computer's own observed hand, public state, legal moves, and the computer's decisions with a final win/loss reward. It does not store the human's hidden hand or the undealt talon order. Games are not used to update AI behavior yet: an offline training and evaluation step still needs to be implemented before level 6 can learn from them.
 
 The default archive limit is **1,000 completed AI games**. When it fills, each new record replaces the oldest one. To allow up to **10,000** instead, set this environment variable before starting the server:
 
@@ -190,45 +190,60 @@ git push -u origin codex/multiple-agents-snapszer # Publish this project branch 
 
 `git status --short` is a compact working-tree checklist: `M` means modified, `??` means untracked, and the first column can mark staged changes. `git branch --show-current` tells you which branch new commits will belong to. `git remote -v` shows where fetches and pushes go. `git log -1 --oneline` identifies the latest commit. `git add` stages selected paths; `git diff --cached --stat` lets you review the staged scope; `git commit` saves that snapshot locally. `git push -u origin <branch>` publishes the named branch and `-u` remembers its upstream, so future pushes can use just `git push`.
 
-In this checkout, local `main` and GitHub's `origin/main` had diverged: local `main` included an unrelated Malom commit and uncommitted Malom files, while GitHub had newer commits of its own. Pushing local `main` would publish that unrelated commit too. So the snapszer work was published as its own feature branch. For a new project branch based on the latest remote main, use:
-
-```powershell
-git fetch origin
-git switch -c codex/multiple-agents-snapszer origin/main
-git cherry-pick <snapszer-commit>
-git push -u origin codex/multiple-agents-snapszer
-```
-
-`git fetch origin` updates your local view of GitHub without changing files. `git switch -c` creates and switches to a branch starting at the latest remote main. `git cherry-pick` copies only the selected commit onto that branch. This avoids accidentally including commits from another local project. If there are uncommitted changes in files that the branch switch would replace, save them first with `git stash push --include-untracked`, then restore them with `git stash pop` after switching.
-
-The larger diagram below labels each branch state with the command that moved the work there. Run the command shown on an arrow to move from the previous state to the next one. Commit IDs are the IDs from this session; when repeating the workflow for another feature, use that feature's commit ID.
+The diagram below shows the actual repository paths and the commands used at each step. The shared base is `394af0d`. GitHub's `main` then advanced to `4c510da`; local `main` has four local commits after the base, while it is six commits behind GitHub's `main`. The snapszer feature branch was based on the remote tip so it could be pushed without publishing those separate local `main` commits.
 
 ```mermaid
-%%{init: {"theme":"base", "themeVariables":{"fontSize":"18px"}, "flowchart":{"nodeSpacing":70,"rankSpacing":90}}}%%
-flowchart LR
-  base["Common base<br/>394af0d"]
+%%{init: {"theme":"dark", "themeVariables":{"fontSize":"16px"}, "flowchart":{"nodeSpacing":45,"rankSpacing":60}}}%%
+flowchart TB
+  base(["394af0d<br/>Közös alap"])
 
-  subgraph remote["GitHub branch path"]
-    direction LR
-    fetch["Remote main tip<br/>origin/main<br/><br/>git fetch origin"]
-    feature["Feature branch created<br/>codex/multiple-agents-snapszer<br/><br/>git switch -c codex/multiple-agents-snapszer origin/main"]
-    cherry["Snapszer commit added<br/>b773c4d<br/><br/>git cherry-pick 0cd115d"]
-    pushed["Published feature branch<br/><br/>git push -u origin codex/multiple-agents-snapszer"]
-    fetch --> feature --> cherry --> pushed
+  subgraph remote["GitHubon publikált snapszer ág"]
+    direction TB
+    remoteMain["origin/main · 4c510da<br/>GitHub frissítése:<br/>git fetch origin main"]
+    createFeature["Feature ág létrehozása:<br/>git switch -c codex/multiple-agents-snapszer origin/main"]
+    firstGame["b773c4d · snapszer projekt<br/>Projekt commit átvétele:<br/>git cherry-pick 0cd115d"]
+    gitManual["10e175d · Git-ábra a kézikönyvben<br/>git commit -m &quot;Expand Git branch workflow diagram&quot;"]
+    fiveLevels["3e48e2d · öt AI-szint és archívum<br/>git cherry-pick 76210fd"]
+    published["origin/codex/multiple-agents-snapszer<br/>Feltöltés: git push -u origin codex/multiple-agents-snapszer<br/>Frissítés: git push"]
+    remoteMain --> createFeature --> firstGame --> gitManual --> fiveLevels --> published
   end
 
-  subgraph local["Separate local main path"]
-    direction LR
-    malom["Local Malom commit<br/>72f542f"]
-    snapszer["Local snapszer commit<br/>0cd115d"]
-    malom --> snapszer
+  subgraph local["Helyi main ág · még nincs összeolvasztva GitHub mainnel"]
+    direction TB
+    malom["72f542f · Python Malom<br/>Korábbi helyi commit"]
+    gameLocal["0cd115d · snapszer projekt<br/>git add &quot;Multiple Agents&quot;<br/>git commit --amend --no-edit"]
+    aiLocal["76210fd · gépi nehézségi szintek<br/>git commit -m &quot;Add selectable snapszer AI difficulty levels&quot;"]
+    vizLocal["6117aa4 · helyi Malom-oldalak<br/>git add .gitignore README.md index.html attractors.html fractals.html mandelbrot-zoom.html<br/>git commit -m &quot;Add local Malom visualization pages&quot;"]
+    malom --> gameLocal --> aiLocal --> vizLocal
   end
 
-  base --> fetch
+  base --> remoteMain
   base --> malom
+
+  classDef baseBranch fill:#30343a,stroke:#9aa3ad,color:#fff
+  classDef localBranch fill:#2457a6,stroke:#6f9fe8,color:#fff
+  classDef remoteBranch fill:#287d43,stroke:#68ba79,color:#fff
+  classDef featureBranch fill:#a94c21,stroke:#ec8a55,color:#fff
+  class base baseBranch
+  class remoteMain remoteBranch
+  class malom,gameLocal,aiLocal,vizLocal localBranch
+  class createFeature,firstGame,gitManual,fiveLevels,published featureBranch
 ```
 
-The pushed branch starts from the latest GitHub `main` and contains the snapszer project by itself. The separate local `main` path shows why we did not push `main`: doing so would also have published the unrelated Malom commit. `git fetch` only updates the remote-tracking reference; `git switch -c` creates the feature branch; `git cherry-pick` copies the selected commit; `git push -u` publishes that branch.
+### What the commands did at each point
+
+| Point in the workflow | Command | Effect |
+| --- | --- | --- |
+| Check the working tree before choosing files | `git status --short` | Shows modified, staged, and untracked files. |
+| Confirm the branch and latest commit | `git branch --show-current`; `git log -1 --oneline` | Shows where a commit would be recorded and the current tip. |
+| Refresh the remote branch pointer | `git fetch origin main` | Reads GitHub's latest `main` without changing the checked-out files. |
+| Protect unrelated local edits while switching branches | `git stash push --include-untracked` | Temporarily stores uncommitted tracked and untracked work. `git stash apply` restored it after returning to local `main`. |
+| Select only the game files and review scope | `git add "Multiple Agents"`; `git diff --cached --stat` | Stages the game folder and summarizes the staged files before commit. |
+| Save a local snapshot | `git commit -m "..."` | Creates a commit on the currently checked-out branch; it does not upload it. |
+| Copy just the game commit onto the remote-based branch | `git cherry-pick <commit>` | Applies that commit to the selected feature branch without carrying the other local `main` commits. |
+| Publish or update the snapszer feature branch | `git push -u origin codex/multiple-agents-snapszer`; later `git push` | Uploads the feature branch and sets its upstream for future pushes. |
+
+The `main` branch line in the graphic is the current local history. The `codex/multiple-agents-snapszer` line is the published GitHub branch. They remain separate until deliberately merged. The later local Malom page commit (`6117aa4`) is saved on local `main`; it has not been pushed to `origin/main`.
 
 ## 7. How the agents worked together in this demo
 
