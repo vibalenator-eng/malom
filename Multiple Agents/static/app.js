@@ -13,7 +13,7 @@ function showError(message) { $("lobbyError").textContent = message || ""; }
 function toast(message, end=false) { const t=$("toast");t.textContent=message;t.className=`toast show${end?" end":""}`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className="toast",2600); }
 async function request(url, options={}) { const res=await fetch(url,{headers:{"Content-Type":"application/json"},...options});const data=await res.json();if(!res.ok)throw new Error(data.error||"Sikertelen kérés.");return data; }
 function startView() { $("lobby").classList.add("hidden");$("game").classList.remove("hidden");$("newGameTop").classList.remove("hidden");clearInterval(pollTimer);refresh();pollTimer=setInterval(refresh,900); }
-async function create(mode) { showError("");try { const result=await request("/api/rooms",{method:"POST",body:JSON.stringify({mode,name:$(("playerName")).value.trim()})});setSession({...result,mode});startView(); } catch(e){showError(e.message);} }
+async function create(mode) { showError("");try { const result=await request("/api/rooms",{method:"POST",body:JSON.stringify({mode,name:$(("playerName")).value.trim(),difficulty:Number($("aiDifficulty").value)})});setSession({...result,mode});startView(); } catch(e){showError(e.message);} }
 async function join() { showError("");const code=$("roomCode").value.trim().toUpperCase();if(!code){showError("Írd be a szobakódot.");return;}try{const result=await request(`/api/rooms/${encodeURIComponent(code)}/join`,{method:"POST",body:JSON.stringify({name:$(("playerName")).value.trim()})});setSession({...result,mode:"online"});startView();}catch(e){showError(e.message);} }
 function returnFromExpiredRoom(error) {
   if(!/Nem található ilyen szoba/i.test(error.message||""))return false;
@@ -74,6 +74,11 @@ function fallbackExchangeReason(s) {
 }
 $("aiButton").onclick=()=>create("ai");$("hotseatButton").onclick=()=>create("hotseat");$("onlineButton").onclick=()=>create("online");$("joinButton").onclick=join;$("roomCode").addEventListener("input",e=>e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,""));
 $("hand").addEventListener("click",e=>{const card=e.target.closest("[data-card]");if(!card||card.classList.contains("disabled"))return;act("play",{card_id:card.dataset.card});});
+$("aiDifficulty").addEventListener("change",()=>{const text={1:"Kezdő: véletlenszerű, de szabályos lapválasztás.",2:"Könnyű: olcsó ütőlapot választ, ha tud; különben kis lapot dob.",3:"Közepes: figyelembe veszi az ütés értékét és az aduk megtartását.",4:"Nehéz: 24 lehetséges rejtett lapelosztással számol.",5:"Mester: 96 lehetséges rejtett lapelosztással számol."};$("difficultyHelp").textContent=text[Number($("aiDifficulty").value)];});
+async function refreshTrainingArchiveStatus(){try{const stats=await request("/api/ai/stats");$("learningOption").textContent="6 · Tanuló — előkészítés ("+stats.saved_games+"/"+stats.capacity+" parti mentve)";}catch{}}
+refreshTrainingArchiveStatus();
+const renderWithBase=render;
+render=function(s){renderWithBase(s);if(s.mode==="ai"){$("modeLabel").textContent+=" · "+["","KEZDŐ","KÖNNYŰ","KÖZEPES","NEHÉZ","MESTER"][s.ai_difficulty||3];if(s.finished)refreshTrainingArchiveStatus();}};
 $("marriages").addEventListener("click",e=>{const b=e.target.closest("[data-marriage][data-card]");if(!b)return;act("play",{card_id:b.dataset.card,declare_suit:b.dataset.marriage});});
 $("closeButton").onclick=()=>act("close");$("exchangeButton").onclick=()=>act("exchange");$("leaveButton").onclick=()=>{clearInterval(pollTimer);session=null;gameState=null;localStorage.removeItem("snapszer-session");$("game").classList.add("hidden");$("lobby").classList.remove("hidden");$("newGameTop").classList.add("hidden");};$("newGameTop").onclick=()=>$("leaveButton").click();$("copyButton").onclick=async()=>{try{await navigator.clipboard.writeText(`${location.origin} — szobakód: ${session.code}`);toast("A meghívó címét és a kódot másoltam.");}catch{toast(`Szobakód: ${session.code}`);}};
 const saved=localStorage.getItem("snapszer-session");if(saved){try{session=JSON.parse(saved);startView();}catch{localStorage.removeItem("snapszer-session");}}

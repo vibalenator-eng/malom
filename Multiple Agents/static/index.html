@@ -24,6 +24,16 @@
       <div class="lobby-card">
         <label for="playerName">A neved</label>
         <input id="playerName" maxlength="18" placeholder="Piros" autocomplete="nickname">
+        <label for="aiDifficulty">Gép nehézsége</label>
+        <select id="aiDifficulty">
+          <option value="1">1 · Kezdő</option>
+          <option value="2">2 · Könnyű</option>
+          <option value="3" selected>3 · Közepes</option>
+          <option value="4">4 · Nehéz</option>
+          <option value="5">5 · Mester</option>
+          <option id="learningOption" value="6" disabled>6 · Tanuló — előkészítés alatt</option>
+        </select>
+        <p id="difficultyHelp" class="small-note">A nehezebb szintek több lehetséges rejtett lapelosztást mérlegelnek. A tanuló módhoz gyűlnek az adatok.</p>
         <button id="aiButton" class="primary">Játék a gép ellen <span>→</span></button>
         <button id="hotseatButton" class="secondary">Két játékos, egy eszköz</button>
         <div class="divider"><span>VAGY ONLINE</span></div>

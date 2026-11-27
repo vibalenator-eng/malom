@@ -4,7 +4,7 @@
 
 This is a small, two-player browser prototype for húzós snapszer. It supports three play modes:
 
-- **Játék a gép ellen** — you play against a simple server-side computer opponent.
+- **Játék a gép ellen** — choose one of five server-side computer difficulty levels; a sixth, learning-based level is being prepared.
 - **Két játékos, egy eszköz** — two people take turns on one browser/device.
 - **Online szoba** — one player creates a room and another joins with its six-character code.
 
@@ -17,7 +17,8 @@ flowchart LR
     Browser[Browser UI\nstatic/index.html, app.js, style.css] -->|HTTP GET/POST + polling| Server[server.py\nThreadingHTTPServer]
     Server --> Rules[rules.py\nGame state and rules]
     Server --> Rooms[In-memory room registry]
-    Server --> AI[Simple legal-move opponent]
+    Server --> AI[ai.py · five difficulty levels]
+    Server --> Archive[Bounded JSONL game archive]
     Rules --> View[Player-specific state view]
     View --> Browser
 ```
@@ -27,28 +28,59 @@ flowchart LR
 | File | Responsibility |
 | --- | --- |
 | `rules.py` | Creates the 20-card deck; deals cards; computes legal plays; resolves tricks; draws cards; tracks points, marriages, talon closure, and the winner. It does not depend on the browser or HTTP server. |
-| `server.py` | Serves static files, creates and joins rooms, authenticates each seat, validates actions through the game state, runs the AI, and returns a player-specific view. |
+| `server.py` | Serves static files and JSON API routes, creates and joins rooms, authenticates each seat, validates actions through the game state, runs the selected AI level, and returns a player-specific view. |
+| `ai.py` | Implements the five selectable opponent levels. The upper two levels sample possible unseen-card distributions and simulate the current trick. It records only the computer's own hand and public information for future learning. |
+| `training_data.py` | Saves completed human-versus-computer games as bounded JSON Lines (JSONL) records for later offline learning and evaluation. |
 | `static/index.html` | Defines the Hungarian lobby, table, score panel, and game controls. |
 | `static/style.css` | Provides the responsive card-table appearance and responsive layout. Card faces crop the local Hungarian Tell sheet as a sprite. |
 | `static/app.js` | Calls the API, polls for updates, and renders only the current browser player's cards and legal options. It maps each card to its image-sheet row and column, and draws inline SVG suit marks: heart for Piros, bell for Tök, leaf for Zöld, and acorn for Makk. It does not decide game rules. |
 | `static/original-hungarian-tell-set.jpg` | The attributed Tell-card sprite sheet used for card faces. See [`ASSETS.md`](./ASSETS.md) for credit and license. |
 | `test_rules.py` | Focused rule checks for the deck, deal, trick resolution, draw order, forced play, marriages, hidden hands, and talon closure. |
+| `test_ai.py` | Checks that all five difficulty levels return legal moves without changing the live game state. |
+| `test_training_data.py` | Checks that the JSONL archive retains only the newest records when its configured capacity is reached. |
 
 ### Room and request flow
 
-1. The first player creates a room with `POST /api/rooms`, selecting AI, hot-seat, or online mode.
+1. The browser sends `POST /api/rooms` to create a room. For a computer game, the JSON body includes the chosen difficulty level.
 2. The server creates a shuffled game and returns a room code plus an unguessable seat token. In online mode, the second player submits the room code to `POST /api/rooms/{code}/join` and receives a different token.
 3. The browser polls `GET /api/rooms/{code}?token=...` roughly once a second. Each response contains that seat's own hand and the IDs of its legal cards. The other player's hand and the deck order are never included in the response.
 4. A play, exchange, or talon-cover action is submitted to `POST /api/rooms/{code}/act`. The server checks the token, turn, card, and action before changing game state.
-5. In AI mode, the server plays the computer's turn immediately after the human's action.
+5. In AI mode, the server passes the current game state to `ai.py`, applies the computer's action through `rules.py`, and returns the updated view. A completed computer game is saved once to the training archive.
 
-Room state and seat tokens live in the server process's memory. Restarting the process removes all rooms. The browser stores its room code and token locally to make a page refresh reconnect to a still-running room.
+Room state and seat tokens live in the server process's memory. Restarting the process removes all active rooms. The browser stores its room code and token locally to make a page refresh reconnect to a still-running room. Completed computer games are a separate persistent archive under `data/`; two-player and hot-seat deals are not saved there.
+
+### How the server works and who talks to it
+
+`python server.py` starts a small Python HTTP server on port 8000. The browser and server communicate over HTTP: normal web requests fetch the page, CSS, JavaScript, and card art; JSON API requests create/join rooms, retrieve a player's view, and submit actions. This is an API channel over HTTP, not a direct browser-to-Python function call or a separate socket protocol. The browser polls about once a second for updates. The server is authoritative: it owns the room and game state, validates every move with `rules.py`, and keeps the other player's hand out of the returned view. In a computer game it also runs `ai.py` on the same Python process.
+
+```mermaid
+%%{init: {"theme":"base", "themeVariables":{"fontSize":"18px"}, "flowchart":{"nodeSpacing":55,"rankSpacing":65}}}%%
+flowchart TB
+  player["You · browser"]
+  ui["static/app.js<br/>Shows cards and sends actions"]
+  api["HTTP + JSON API<br/>GET view · POST action"]
+  server["server.py<br/>Room, tokens, request handling"]
+  rules["rules.py<br/>Checks rules and scores tricks"]
+  ai["ai.py<br/>Chooses computer move"]
+  archive["training_data.py<br/>Saves finished AI games to JSONL"]
+
+  player <-->|"clicks / rendered view"| ui
+  ui <-->|"HTTP requests and JSON responses"| api
+  api <--> server
+  server --> rules
+  server --> ai
+  rules --> server
+  ai --> server
+  server -->|"finished AI game"| archive
+```
+
+Typical turn: you click a legal card; `app.js` sends its card ID to the API; `server.py` gives it to `rules.py` to validate; if it is the computer's turn, `server.py` asks `ai.py` for a move and `rules.py` applies it; then the server returns the new player-specific state as JSON for the browser to render. Another person connects to the same server address and room API from their browser. The server is the meeting point for both browsers.
 
 ## 3. Network and security boundaries
 
 The server listens on all local interfaces at port 8000. This lets another device on the same local network reach the host computer using its LAN IP address. A six-character room code is only an invitation; the seat token is the credential used for API access.
 
-This is a demonstration server, not an internet-ready service. It has no TLS, rate limits, accounts, durable storage, matchmaking, or deployment configuration. On a shared or public network, traffic and the Python process need suitable network protections. To play across the public internet, deploy it on a reachable host and put HTTPS in front of it.
+This is a demonstration server, not an internet-ready service. It has no TLS, rate limits, accounts, durable room storage, matchmaking, or deployment configuration. Only the bounded computer-game learning archive persists to disk. On a shared or public network, traffic and the Python process need suitable network protections. To play across the public internet, deploy it on a reachable host and put HTTPS in front of it.
 
 Rooms are stored in memory, so restarting the server ends active deals. If the browser has a saved room that no longer exists, the app clears that session and returns to the start screen.
 
@@ -67,7 +99,28 @@ House rules vary. The prototype uses one documented two-player draw-pile variant
 - The first player to reach 66 wins. If the open talon is exhausted and the deal ends before anyone gets 66, the last trick wins.
 - Each trick's card points are awarded together to the player who wins that trick, including the card played by the opponent. At the end, the table displays the winner's name and the final score.
 
-The computer opponent uses a small heuristic: it follows legal-move constraints, tends to take a trick with the lowest winning card, and prefers higher cards when leading. It is intentionally a simple opponent, not a strong strategic AI.
+### Computer levels and learning archive
+
+The lobby offers five selectable levels:
+
+1. **Kezdő:** chooses a random legal card.
+2. **Könnyű:** prefers a low-point winning card, or discards a low-point card when it cannot win.
+3. **Közepes:** weighs trick value, card rank, and keeping trump; it exchanges the trump Alsó when the exposed trump is available.
+4. **Nehéz:** evaluates each move over 24 randomly dealt possibilities for the unseen cards.
+5. **Mester:** uses the same current-trick search over 96 possible unseen-card distributions.
+
+Search levels do not know the opponent's actual hand or the talon's real order. They sample plausible unseen cards and use a simple response policy to estimate the result. This is a stronger decision aid, not a perfect solver.
+
+Level 6 (**Tanuló**) is shown as unavailable while its data collection is prepared. The app now saves each completed human-versus-computer deal to `data/ai_training_games.jsonl`, one compact JSON object per line. A record includes the chosen difficulty, score, winner, the computer's own observed hand, public state, legal moves, and the computer's decisions with a final win/loss reward. It does not store the human's hidden hand or the undealt talon order. Games are not used to update AI behavior yet: an offline training and evaluation step still needs to be implemented before level 6 can learn from them.
+
+The default archive limit is **1,000 completed AI games**. When it fills, each new record replaces the oldest one. To allow up to **10,000** instead, set this environment variable before starting the server:
+
+```powershell
+$env:SNAPSZER_MAX_TRAINING_GAMES = "10000"
+python server.py
+```
+
+To use the 1,000-game limit explicitly, set it to `1000`; other values fall back to 1,000. The archive is local JSONL text, can be opened with a text editor, and is excluded from Git so played games are not committed. The browser lobby shows how many archived games there are. A future level 6 should train offline from this archive, then be compared against fixed test deals before it is enabled; simply storing games does not make the AI learn automatically.
 
 ## 5. User manual
 
@@ -84,7 +137,7 @@ Open <http://localhost:8000> in a modern browser. Leave the terminal running for
 ### Play against the computer
 
 1. Enter a name if you like.
-2. Choose **Játék a gép ellen**.
+2. Choose a level from **Gép nehézsége** (1–5), then choose **Játék a gép ellen**. The sixth, **Tanuló**, remains disabled while the archive and future learning algorithm are prepared.
 3. Click one of your highlighted/legal cards to play it. The computer responds automatically. Its completed trick remains visible for five seconds before your next response is enabled.
 4. When talon covering or trump exchange is legal, its action appears in the right-hand panel. A 20/40 marriage appears as two buttons directly above your hand when you lead with a same-suit Király + Felső. Choose the button for the card you want to play; that click both announces the marriage and plays that card. You do not select both cards.
 5. The first player to 66 wins the deal.

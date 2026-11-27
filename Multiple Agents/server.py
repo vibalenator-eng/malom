@@ -8,33 +8,26 @@ import secrets
 import threading
 import urllib.parse
 
-from rules import Game, CARD_POINTS, RANK_STRENGTH, SUITS
+from ai import LEVELS, choose_move, observation
+from rules import Game
+from training_data import make_record, save_game, stats as training_stats
 
 ROOT = Path(__file__).resolve().parent
 ROOMS: dict[str, dict] = {}
 LOCK = threading.RLock()
 
 
-def ai_action(game: Game) -> None:
-    """A simple legal, point-aware opponent that occasionally declares a marriage."""
+def ai_action(game: Game, difficulty: int) -> dict:
+    """Play one move and return its private-observation training sample."""
     player = game.turn
-    legal = game.legal_cards(player)
-    # Prefer a legal card that wins a current trick; otherwise spend a low card.
-    if game.lead_card:
-        def takes(card):
-            lead = game.lead_card
-            return (card["suit"] == game.trump and lead["suit"] != game.trump) or (card["suit"] == lead["suit"] and RANK_STRENGTH[card["rank"]] > RANK_STRENGTH[lead["rank"]])
-        winners = [c for c in legal if takes(c)]
-        if winners:
-            card = min(winners, key=lambda c: CARD_POINTS[c["rank"]])
-        else:
-            card = min(legal, key=lambda c: CARD_POINTS[c["rank"]])
-    else:
-        card = max(legal, key=lambda c: CARD_POINTS[c["rank"]])
-    declare = next((s for s in SUITS if game.lead_card is None and s in {c["suit"] for c in game.hands[player] if c["rank"] == "K"} and s in {c["suit"] for c in game.hands[player] if c["rank"] == "F"}), None)
-    if declare:
-        card = next(c for c in legal if c["suit"] == declare and c["rank"] in {"K", "F"})
+    if difficulty >= 3 and game.lead_card is None and game.talon_open and game.trump_card:
+        trump_lower = next((c for c in game.hands[player] if c["suit"] == game.trump and c["rank"] == "Alo"), None)
+        if trump_lower:
+            game.exchange_trump(player)
+    state = observation(game, player)
+    card, declare = choose_move(game, difficulty)
     game.play(player, card["id"], declare)
+    return {"observation": state, "action": {"card": card["id"], "declare": declare}}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -80,10 +73,15 @@ class Handler(BaseHTTPRequestHandler):
         names = room["names"][:]
         if room["mode"] == "online" and not room["tokens"][1]:
             names[1] = "Várakozás..."
-        return room["game"].view(player, "", room["code"], room["mode"], names)
+        view = room["game"].view(player, "", room["code"], room["mode"], names)
+        if room["mode"] == "ai":
+            view["ai_difficulty"] = room["difficulty"]
+        return view
 
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == "/api/ai/stats":
+            return self._send(200, training_stats())
         if parsed.path == "/":
             return self._send(200, (ROOT / "static" / "index.html").read_bytes(), "text/html; charset=utf-8")
         if parsed.path.startswith("/static/"):
@@ -116,6 +114,9 @@ class Handler(BaseHTTPRequestHandler):
                 mode = body.get("mode", "ai")
                 if mode not in {"ai", "online", "hotseat"}:
                     raise ValueError("Ismeretlen játékmód.")
+                difficulty = body.get("difficulty", 3)
+                if type(difficulty) is not int or difficulty not in LEVELS:
+                    raise ValueError("Válassz 1 és 5 közötti gépi nehézségi szintet.")
                 with LOCK:
                     code = secrets.token_urlsafe(4).replace("-", "").replace("_", "").upper()[:6]
                     while code in ROOMS:
@@ -127,7 +128,8 @@ class Handler(BaseHTTPRequestHandler):
                         tokens[1] = "AI"
                     elif mode == "hotseat":
                         tokens[1] = token
-                    room = {"code": code, "mode": mode, "tokens": tokens, "names": [body.get("name") or "Piros", "Kék" if mode != "ai" else "Számítógép"], "game": game}
+                    room = {"code": code, "mode": mode, "tokens": tokens, "names": [body.get("name") or "Piros", "Kék" if mode != "ai" else "Számítógép"], "game": game,
+                            "difficulty": difficulty, "training_samples": [], "training_saved": False}
                     ROOMS[code] = room
                 return self._send(201, {"code": code, "token": token, "player": 0})
             parts = parsed.path.strip("/").split("/")
@@ -157,7 +159,7 @@ class Handler(BaseHTTPRequestHandler):
                             recent_opponent_trick = game.last_trick[:]
                         if room["mode"] == "ai":
                             while not game.finished and game.turn == 1:
-                                ai_action(game)
+                                room["training_samples"].append(ai_action(game, room["difficulty"]))
                                 if game.last_trick_winner == 1 and len(game.last_trick or []) == 2:
                                     recent_opponent_trick = game.last_trick[:]
                     elif action == "close":
@@ -166,6 +168,13 @@ class Handler(BaseHTTPRequestHandler):
                         game.exchange_trump(player)
                     else:
                         raise ValueError("Ismeretlen lépés.")
+                    if room["mode"] == "ai" and game.finished and not room["training_saved"]:
+                        try:
+                            save_game(make_record(room["difficulty"], room["training_samples"], game.winner,
+                                                  game.points[:], game.end_reason))
+                            room["training_saved"] = True
+                        except OSError as exc:
+                            print(f"Nem sikerült a tanulási partit menteni: {exc}")
                     view = self._view(room, player)
                     if recent_opponent_trick:
                         view["recent_opponent_trick"] = recent_opponent_trick
