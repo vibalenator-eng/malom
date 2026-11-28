@@ -2,3 +2,7 @@ __pycache__/
 *.py[cod]
 .venv/
 .env
+
+# Local generated patent material; it belongs to a different project.
+output/
+tmp_create_patent_pdf.py
